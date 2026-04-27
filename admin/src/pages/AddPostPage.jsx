@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
-import { Editor } from '@tinymce/tinymce-react';
+import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import {
   Save, Image as ImageIcon, Trash2, ListOrdered, FilePlus2, Settings2, ImagePlus, SlidersHorizontal
 } from 'lucide-react';
@@ -141,10 +141,8 @@ const AddPostPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.title.trim().length < 5) { toast.error('Title must be at least 5 characters.'); return; }
-    if (editorRef.current) {
-      const plain = editorRef.current.getContent({ format: 'text' }).trim();
-      if (plain.length < 30) { toast.error('Please add more body content.'); return; }
-    }
+    if (formData.content.length < 30) { toast.error('Please add more body content.'); return; }
+    
     setLoading(true);
     const submissionData = new FormData();
     const contentWithMeta = `${formData.content}
@@ -167,208 +165,19 @@ const AddPostPage = () => {
     }
   };
 
-  const editorConfig = {
-  /* Layout & Menus */
-  height: 620,
-  menubar: false,
-  toolbar_mode: 'sliding',
-  toolbar_sticky: true,               // keep toolbar visible while scrolling
-  toolbar_sticky_offset: 64,          // adjust if your top header is taller/shorter
-
-  /* Popular, free plugins only */
-  plugins: [
-    // Essentials
-    'autolink', 'lists', 'advlist', 'link', 'image', 'media', 'table',
-    // Authoring utilities
-    'searchreplace', 'preview', 'anchor', 'charmap', 'hr', 'nonbreaking', 'insertdatetime',
-    'toc', 'quickbars', 'autoresize', 'directionality', 'visualblocks',
-    'wordcount', 'textpattern',
-    // Power tools
-    'code', 'fullscreen', 'pagebreak'
-  ],
-
-  /* Put Color + Align + Font + Font Size first, and Fullscreen clearly visible */
-  toolbar:
-    'forecolor backcolor | alignleft aligncenter alignright alignjustify | ' +
-    'fontfamily fontsize | bold italic underline | blocks | ' +
-    'bullist numlist outdent indent | link image media table | ' +
-    'searchreplace preview visualblocks code fullscreen | toc pagebreak',
-
-  /* Quickbars (appear on selection / insertion) */
-  quickbars_selection_toolbar:
-    'bold italic underline | forecolor backcolor | link | alignleft aligncenter alignright | bullist numlist | removeformat',
-  quickbars_insert_toolbar: 'image media table hr',
-
-  /* Brand color palette (shows first in color pickers) */
-  color_map: [
-    // Brand & accent first
-    '4f46e5', 'Brand Indigo',
-    '4338ca', 'Indigo Dark',
-    'f97316', 'Accent Orange',
-    'ea580c', 'Accent Dark',
-    // Inks & neutrals to match your site
-    '0f172a', 'Ink 900',
-    '1e293b', 'Ink 800',
-    '334155', 'Ink 700',
-    '475569', 'Ink 600',
-    'e2e8f0', 'Line',
-    'f8fafc', 'Soft'
-  ],
-
-  /* Font menus (loaded below in content_style) */
-  font_family_formats:
-    'Default=; ' +
-    'Inter=Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; ' +
-    'Open Sans="Open Sans",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; ' +
-    'Roboto=Roboto,system-ui,-apple-system,Segoe UI,Helvetica,Arial,sans-serif; ' +
-    'Georgia=Georgia,serif; ' +
-    'Merriweather=Merriweather,Georgia,serif; ' +
-    'Lora=Lora,Georgia,serif; ' +
-    'Source Serif Pro="Source Serif Pro",Georgia,serif; ' +
-    'Monospace=SFMono-Regular,Consolas,Monaco,monospace',
-  fontsize_formats: '12px 14px 16px 18px 20px 22px 24px 28px 32px 36px',
-
-  /* Keep common HTML intact */
-  extended_valid_elements:
-    'h1[class|style],h2[class|style],h3[class|style],h4[class|style],' +
-    'p[class|style],strong,em,u,span[class|style],' +
-    'ul,li,ol,a[href|target|rel|title],' +
-    'img[src|alt|width|height|style],blockquote,code,pre,hr,' +
-    'table[width|height|class|style],tr,td,th,thead,tbody,tfoot,' +
-    'div[class|style],section[class|style],figure[class|style],figcaption[class|style]',
-
-  /* Comfortable writing */
-  autoresize_bottom_margin: 40,
-  autoresize_min_height: 420,
-  autoresize_overflow_padding: 16,
-
-  /* Document-like appearance (toggle with pageMode in your component) */
-  body_class: pageMode ? 'page-mode show-ruler' : '',
-
-  /* Make editor visuals match your SinglePostPage exactly */
-  content_style: `
-    /* Load menu fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&family=Merriweather:wght@400;700&family=Lora:wght@400;600&family=Source+Serif+Pro:wght@400;600&display=swap');
-
-    :root {
-      --ink-900: #0f172a;
-      --ink-800: #1e293b;
-      --ink-700: #334155;
-      --ink-600: #475569;
-      --line: #e2e8f0;
-      --soft: #f8fafc;
-      --brand: #4f46e5;        /* Use your Indigo as primary in editor */
-      --brand-dark: #4338ca;
-      --brand-soft: #eef2ff;
-      --accent: #F97316;
-      --accent-dark: #EA580C;
-    }
-
-    body {
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      font-size: 1.05rem;
-      line-height: 1.75;
-      color: var(--ink-800);
-    }
-
-    /* Page layout simulation */
-    body.page-mode {
-      max-width: 800px;
-      margin: 32px auto !important;
-      padding: 2.54cm 2.2cm;
-      background: #ffffff;
-      border: 1px solid var(--line);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    }
-    body.show-ruler.page-mode { position: relative; }
-    body.show-ruler.page-mode:before {
-      content: '';
-      position: absolute; top: 16px; left: 2.2cm; right: 2.2cm; height: 8px;
-      background-image: repeating-linear-gradient(to right, #c7c7c7, #c7c7c7 1px, transparent 1px, transparent 8px);
-      opacity: 0.55; pointer-events: none;
-    }
-
-    /* Headings (mirror your front-end) */
-    h1 { font-size: 2rem; line-height: 1.25; margin: 0.8em 0 0.4em; font-weight: 800; color: var(--ink-900); }
-    h2 { margin: 1.6rem 0 0.7rem; font-size: 1.4rem; font-weight: 800; color: var(--ink-900); }
-    h3 { margin: 1.2rem 0 0.6rem; font-size: 1.2rem; font-weight: 800; color: var(--ink-900); }
-
-    /* Paragraphs & links */
-    p { margin: 0 0 1.1em; }
-    a { color: var(--accent-dark); text-decoration: none; border-bottom: 1px dashed rgba(234, 88, 12, 0.4); }
-    a:hover { border-bottom-color: var(--accent-dark); }
-
-    /* Lists */
-    ul, ol { padding-left: 1.2em; }
-
-    /* Inline/Block code */
-    code {
-      background: #0f172a0d;
-      padding: 0.15em 0.35em;
-      border-radius: 6px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    pre {
-      background: #0f172a0d;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px;
-      overflow: auto;
-    }
-
-    /* Tables */
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; }
-    tr:nth-child(even) { background: #fafafa; }
-
-    /* Images & figures */
-    img { max-width: 100%; height: auto; display: block; border-radius: 12px; }
-    figure { margin: 1rem 0; }
-    figcaption { margin-top: 6px; font-size: 0.9rem; color: var(--ink-600); text-align: center; }
-
-    /* Blockquote */
-    blockquote {
-      border-left: 4px solid var(--line);
-      margin: 1em 0;
-      padding: 0.5em 1em;
-      color: #444;
-      background: var(--soft);
-      border-radius: 6px;
-    }
-  `,
-
-  /* Support captions on images */
-  image_caption: true,
-
-  /* Image uploads — unchanged routes */
-  automatic_uploads: true,
-  images_upload_url: '/api/posts/upload-image',
-  images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+  const handleEditorImageUpload = async (file) => {
     const formData = new FormData();
-    formData.append('file', blobInfo.blob(), blobInfo.filename());
-    api.post('/posts/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-    .then(res => {
-      if (res.data && res.data.location) resolve(res.data.location);
-      else reject('Invalid JSON response from server');
-    })
-    .catch(err => reject('Image upload failed: ' + (err.response?.data?.message || err.message)));
-  }),
-
-  /* Paste: keep structure, reduce junk */
-  paste_block_drop: true,
-  paste_merge_formats: true,
-  // If you see very messy pastes from Word/Docs, you can enable:
-  // valid_styles: { '*': 'text-align,color,background-color,font-size,font-family' },
-
-  /* Links default to new tab */
-  default_link_target: '_blank',
-  link_target_list: false,
-
-  /* Polish */
-  branding: false
-};
+    formData.append('file', file);
+    try {
+      const res = await api.post('/posts/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data.location;
+    } catch (err) {
+      toast.error('Image upload failed');
+      throw err;
+    }
+  };
 
 
 
@@ -438,15 +247,14 @@ const AddPostPage = () => {
               </button>
             </div>
 
-            <Editor
-              apiKey={tinymceApiKey}
-              onInit={(evt, editor) => (editorRef.current = editor)}
+            <RichTextEditor
               value={formData.content}
-              init={editorConfig}
-              onEditorChange={(newContent) => {
+              onChange={(newContent) => {
                 setFormData(prev => ({ ...prev, content: newContent }));
                 if (!isDirty) setIsDirty(true);
               }}
+              onImageUpload={handleEditorImageUpload}
+              placeholder="Write your amazing post here..."
             />
           </fieldset>
         </main>

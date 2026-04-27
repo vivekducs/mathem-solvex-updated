@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Editor } from '@tinymce/tinymce-react';
+import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import styles from './AddQuestionPage.module.css';
 import toast from 'react-hot-toast';
 import MathLiveModal from '../components/MathLiveModal';
@@ -34,13 +34,10 @@ const AddQuestionPage = () => {
     
     // MathLive State
     const [isMathModalOpen, setIsMathModalOpen] = useState(false);
-    const [activeEditorField, setActiveEditorField] = useState({ field: null, index: null });
+    const [mathCallback, setMathCallback] = useState(null);
     
     // Split pane state
     const [showPreviewPane, setShowPreviewPane] = useState(window.innerWidth > 1024);
-
-    // Refs for all TinyMCE editors to allow manual insertion
-    const editorRefs = useRef({}); 
 
     useEffect(() => {
         const handleResize = () => setShowPreviewPane(window.innerWidth > 1024);
@@ -165,31 +162,18 @@ const AddQuestionPage = () => {
         }
     };
 
-    const openMathModal = (fieldName, optionIndex = null) => {
-        setActiveEditorField({ field: fieldName, index: optionIndex });
+    const openMathModal = (callback) => {
+        setMathCallback(() => callback);
         setIsMathModalOpen(true);
     };
 
     const handleInsertMath = (latexString) => {
-        const editorKey = activeEditorField.index !== null 
-            ? `${activeEditorField.field}_${activeEditorField.index}` 
-            : activeEditorField.field;
-            
-        const editor = editorRefs.current[editorKey];
-        if (editor) {
-            editor.insertContent(latexString);
-        } else {
-             // Fallback if ref is not caught yet (rare)
-             toast.error("Could not find editor focus. Please paste manually.");
+        // latexString comes as \((...)\) from MathLiveModal
+        // We want just the inner latex for our data-latex attribute
+        const latex = latexString.replace(/^\\\(/, '').replace(/\\\)$/, '');
+        if (mathCallback) {
+            mathCallback(latex);
         }
-    };
-
-    const editorConfig = {
-        height: 200,
-        menubar: false,
-        plugins: 'lists link image charmap searchreplace visualblocks wordcount codesample',
-        toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link codesample | removeformat',
-        content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:16px; line-height: 1.6; } p { margin: 0 0 10px; }',
     };
 
     if (loading && isEditMode) return <div className={styles.loaderSpinner}>Loading Question...</div>;
@@ -277,12 +261,11 @@ const AddQuestionPage = () => {
                                 </button>
                             </div>
                             <div className={styles.editorWrapper}>
-                                <Editor 
-                                    apiKey={tinymceApiKey} 
+                                <RichTextEditor 
                                     value={formData.questionText} 
-                                    onEditorChange={(c) => handleEditorChange(c, 'questionText')} 
-                                    init={editorConfig} 
-                                    onInit={(evt, editor) => editorRefs.current['questionText'] = editor}
+                                    onChange={(c) => handleEditorChange(c, 'questionText')} 
+                                    onMathClick={openMathModal}
+                                    placeholder="Type your question here..."
                                 />
                             </div>
                             <div className={styles.fileInputWrapper}>
@@ -319,12 +302,11 @@ const AddQuestionPage = () => {
                                             </div>
                                         </div>
                                         
-                                        <Editor 
-                                            apiKey={tinymceApiKey} 
+                                        <RichTextEditor 
                                             value={option.text} 
-                                            onEditorChange={(c) => handleEditorChange(c, 'text', index)} 
-                                            init={{...editorConfig, height: 150}} 
-                                            onInit={(evt, editor) => editorRefs.current[`options_${index}`] = editor}
+                                            onChange={(c) => handleEditorChange(c, 'text', index)} 
+                                            onMathClick={openMathModal}
+                                            placeholder={`Option ${String.fromCharCode(65 + index)} content...`}
                                         />
                                         
                                         <div className={styles.fileInputWrapperSmall}>
@@ -352,12 +334,11 @@ const AddQuestionPage = () => {
                                 <input type="text" name="videoURL" value={formData.videoURL} onChange={handleInputChange} placeholder="Video Solution URL (YouTube link)" />
                             </div>
                             <div className={styles.editorWrapper}>
-                                <Editor 
-                                    apiKey={tinymceApiKey} 
+                                <RichTextEditor 
                                     value={formData.explanationText} 
-                                    onEditorChange={(c) => handleEditorChange(c, 'explanationText')} 
-                                    init={editorConfig} 
-                                    onInit={(evt, editor) => editorRefs.current['explanationText'] = editor}
+                                    onChange={(c) => handleEditorChange(c, 'explanationText')} 
+                                    onMathClick={openMathModal}
+                                    placeholder="Explain the solution step by step..."
                                 />
                             </div>
                         </div>
