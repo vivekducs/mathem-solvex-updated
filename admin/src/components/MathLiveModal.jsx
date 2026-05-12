@@ -20,7 +20,7 @@ const MathLiveModal = ({ isOpen, onClose, onInsert }) => {
         if (mathFieldRef.current) {
             // Get LaTeX from the math-field
             const latex = mathFieldRef.current.value;
-            onInsert(`\\(${latex}\\)`); // Wrap in inline math delimiters
+            onInsert(latex); // Return raw LaTeX
         }
         setMathValue('');
         onClose();
