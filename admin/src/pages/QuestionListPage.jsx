@@ -1,47 +1,90 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import styles from './QuestionListPage.module.css';
 import MathPreview from '../components/MathPreview';
 import toast from 'react-hot-toast';
-import { PlusCircle, Edit, Trash2, ArrowUpDown } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ArrowUpDown, RefreshCw } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 
 const ITEMS_PER_PAGE = 15;
 
-// get page from sessionStorage
-const getInitialPage = () => {
-  const saved = sessionStorage.getItem('questionListPage');
-  return saved ? Number(saved) : 1;
-};
-
 const QuestionListPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState({ exam: '', subject: '', year: '' });
-  const [searchTerm, setSearchTerm] = useState('');
+  // ── Dynamic filter options from backend ──
+  const [filterOptions, setFilterOptions] = useState({
+    exams: [],
+    subjects: [],
+    topics: [],
+    years: [],
+  });
+  const [filtersLoading, setFiltersLoading] = useState(true);
 
-  // ADDED: initialize from sessionStorage
-  const [currentPage, setCurrentPage] = useState(getInitialPage);
-
+  // ── Filters synced with URL params ──
+  const [filters, setFilters] = useState({
+    exam: searchParams.get('exam') || '',
+    subject: searchParams.get('subject') || '',
+    topic: searchParams.get('topic') || '',
+    year: searchParams.get('year') || '',
+  });
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get('page')) || 1
+  );
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [sortConfig, setSortConfig] = useState({
-    key: 'questionNumber',
-    direction: 'desc',
+    key: searchParams.get('sortBy') || 'questionNumber',
+    direction: searchParams.get('order') || 'desc',
   });
-
-  //  ADDED: go-to-page input
   const [pageInput, setPageInput] = useState('');
 
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
-  //  ADDED: persist page on change
+  // ── Fetch filter options from backend on mount ──
   useEffect(() => {
-    sessionStorage.setItem('questionListPage', currentPage);
-  }, [currentPage]);
+    let alive = true;
+    const fetchFilterOptions = async () => {
+      try {
+        setFiltersLoading(true);
+        const res = await api.get('/questions/filters');
+        if (alive) {
+          setFilterOptions({
+            exams: res.data.exams || [],
+            subjects: res.data.subjects || [],
+            topics: res.data.topics || [],
+            years: res.data.years || [],
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching filter options:', err);
+      } finally {
+        if (alive) setFiltersLoading(false);
+      }
+    };
+    fetchFilterOptions();
+    return () => { alive = false; };
+  }, []);
 
+  // ── Sync filters to URL search params ──
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.exam) params.set('exam', filters.exam);
+    if (filters.subject) params.set('subject', filters.subject);
+    if (filters.topic) params.set('topic', filters.topic);
+    if (filters.year) params.set('year', filters.year);
+    if (debouncedSearchTerm) params.set('search', debouncedSearchTerm);
+    if (currentPage > 1) params.set('page', currentPage);
+    if (sortConfig.key !== 'questionNumber') params.set('sortBy', sortConfig.key);
+    if (sortConfig.direction !== 'desc') params.set('order', sortConfig.direction);
+    setSearchParams(params, { replace: true });
+  }, [filters, debouncedSearchTerm, currentPage, sortConfig, setSearchParams]);
+
+  // ── Fetch questions ──
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
     try {
@@ -51,9 +94,10 @@ const QuestionListPage = () => {
         search: debouncedSearchTerm,
         exam: filters.exam,
         subject: filters.subject,
+        topic: filters.topic,
         year: filters.year,
-        sortBy: sortConfig.key,
-        order: sortConfig.direction,
+        sortField: sortConfig.key,
+        sortOrder: sortConfig.direction === 'asc' ? 1 : -1,
       });
 
       const response = await api.get(`/questions?${params.toString()}`);
@@ -101,13 +145,12 @@ const QuestionListPage = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ exam: '', subject: '', year: '' });
+    setFilters({ exam: '', subject: '', topic: '', year: '' });
     setSearchTerm('');
     setCurrentPage(1);
-    setSortConfig({ key: 'createdAt', direction: 'desc' });
+    setSortConfig({ key: 'questionNumber', direction: 'desc' });
   };
 
-  // ADDED: go-to-page handler
   const goToPage = () => {
     const page = Number(pageInput);
     if (!page || page < 1 || page > totalPages) {
@@ -137,42 +180,47 @@ const QuestionListPage = () => {
             value={searchTerm}
             placeholder="Search questions by text or Q.No..."
             className={styles.searchInput}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
 
-          <select name="exam" value={filters.exam} onChange={handleFilterChange}>
+          <select name="exam" value={filters.exam} onChange={handleFilterChange} className={styles.filterDropdown}>
             <option value="">All Exams</option>
-            <option value="NIMCET">NIMCET</option>
-            <option value="IGDTUW"></option>
-            <option value="CUET PG">CUET PG</option>
-            <option value="JAMIA">JAMIA</option>
-            <option value="MAH-CET">MAH-CET</option>
-            <option value="NDA">NDA</option>
-            <option value="JEE">JEE</option>
+            {filterOptions.exams.map((exam) => (
+              <option key={exam} value={exam}>{exam}</option>
+            ))}
           </select>
 
-          <select name="subject" value={filters.subject} onChange={handleFilterChange}>
+          <select name="subject" value={filters.subject} onChange={handleFilterChange} className={styles.filterDropdown}>
             <option value="">All Subjects</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Reasoning">Reasoning</option>
-            <option value="Computer">Computer</option>
+            {filterOptions.subjects.map((subj) => (
+              <option key={subj} value={subj}>{subj}</option>
+            ))}
           </select>
 
-          <select name="year" value={filters.year} onChange={handleFilterChange}>
+          <select name="topic" value={filters.topic} onChange={handleFilterChange} className={styles.filterDropdown}>
+            <option value="">All Topics</option>
+            {filterOptions.topics.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+
+          <select name="year" value={filters.year} onChange={handleFilterChange} className={styles.filterDropdown}>
             <option value="">All Years</option>
-            {[2025, 2024, 2023, 2022, 2021, 2020].map((y) => (
+            {filterOptions.years.map((y) => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
 
           <button onClick={resetFilters} className={styles.clearBtn}>
-            Clear Filters
+            <RefreshCw size={14} />
+            Clear
           </button>
         </div>
 
         <div className={styles.tableWrapper}>
           <p className={styles.countInfo}>
             Showing {questions.length} of {totalCount} total questions.
+            {filtersLoading && ' (Loading filters...)'}
           </p>
 
           <table className={styles.questionsTable}>
@@ -183,9 +231,21 @@ const QuestionListPage = () => {
                     Q. No. <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th onClick={() => handleSort('exam')}>Exam</th>
-                <th onClick={() => handleSort('subject')}>Subject</th>
-                <th onClick={() => handleSort('year')}>Year</th>
+                <th onClick={() => handleSort('exam')}>
+                  <div className={styles.sortableContent}>
+                    Exam <ArrowUpDown size={14} />
+                  </div>
+                </th>
+                <th onClick={() => handleSort('subject')}>
+                  <div className={styles.sortableContent}>
+                    Subject <ArrowUpDown size={14} />
+                  </div>
+                </th>
+                <th onClick={() => handleSort('year')}>
+                  <div className={styles.sortableContent}>
+                    Year <ArrowUpDown size={14} />
+                  </div>
+                </th>
                 <th>Question Preview</th>
                 <th className={styles.actionsHeader}>Actions</th>
               </tr>
@@ -237,7 +297,7 @@ const QuestionListPage = () => {
           </table>
         </div>
 
-        {/* EXTENDED PAGINATION */}
+        {/* Pagination */}
         <div className={styles.pagination}>
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -261,6 +321,7 @@ const QuestionListPage = () => {
             placeholder="Go to page"
             value={pageInput}
             onChange={(e) => setPageInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && goToPage()}
             style={{ width: '90px', marginLeft: '8px' }}
           />
           <button onClick={goToPage}>Go</button>
@@ -271,4 +332,3 @@ const QuestionListPage = () => {
 };
 
 export default QuestionListPage;
-

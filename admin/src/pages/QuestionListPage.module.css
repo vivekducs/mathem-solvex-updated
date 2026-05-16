@@ -22,20 +22,39 @@
 }
 
 .filterControls {
-  display: flex; gap: 15px; flex-wrap: wrap;
+  display: flex; gap: 10px; flex-wrap: wrap;
   padding-bottom: 20px;
   border-bottom: 1px solid #e2e8f0;
+  align-items: center;
 }
-.searchInput, .filterDropdown {
+.searchInput {
   padding: 10px 15px; border: 1px solid #cbd5e1;
   border-radius: 8px; font-size: 1rem;
+  flex-grow: 1; min-width: 220px;
+  outline: none;
+  transition: border-color 0.2s;
 }
-.searchInput { flex-grow: 1; min-width: 250px; }
-.filterDropdown { min-width: 150px; }
+.searchInput:focus { border-color: #6366f1; }
+
+.filterDropdown {
+  padding: 10px 12px; border: 1px solid #cbd5e1;
+  border-radius: 8px; font-size: 0.9rem;
+  min-width: 130px;
+  color: #334155;
+  background: white;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.filterDropdown:focus { border-color: #6366f1; }
+
 .clearBtn {
   background-color: #f1f5f9; border: 1px solid #cbd5e1;
-  color: #334155; padding: 10px 20px; border-radius: 8px;
+  color: #334155; padding: 10px 16px; border-radius: 8px;
   font-weight: 500; cursor: pointer; transition: background-color 0.2s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 .clearBtn:hover { background-color: #e2e8f0; }
 
@@ -49,16 +68,15 @@
 .questionsTable th {
   font-size: 0.8rem; font-weight: 600;
   color: #475569; text-transform: uppercase; letter-spacing: 0.5px;
+  cursor: pointer; user-select: none;
 }
-/* .sortable itself just makes the th clickable */
-.sortable { cursor: pointer; user-select: none; } 
-/* The actual flex properties for aligning content inside the th */
 .sortableContent {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.questionsTable tbody tr { border-bottom: 1px solid #f1f5f9; }
+.questionsTable tbody tr { border-bottom: 1px solid #f1f5f9; transition: background-color 0.15s; }
+.questionsTable tbody tr:hover { background-color: #f8fafc; }
 .questionsTable tbody tr:last-child { border-bottom: none; }
 
 .questionPreview {
@@ -87,6 +105,26 @@
 .pagination button {
   padding: 8px 15px; border-radius: 6px; border: 1px solid #cbd5e1;
   background-color: white; font-weight: 500; cursor: pointer;
+  transition: all 0.2s;
 }
+.pagination button:hover:not(:disabled) { background-color: #f1f5f9; border-color: #94a3b8; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
 .pagination span { font-weight: 500; color: #475569; }
+.pagination input {
+  padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+  outline: none; font-size: 0.9rem;
+}
+.pagination input:focus { border-color: #6366f1; }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .container { padding: 12px; }
+  .header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .header h1 { font-size: 1.4rem; }
+  .filterControls { gap: 8px; }
+  .searchInput { min-width: 100%; }
+  .filterDropdown { min-width: calc(50% - 4px); flex: 1; }
+  .questionsTable th, .questionsTable td { padding: 10px 8px; font-size: 0.85rem; }
+  .questionPreview { max-width: 200px; }
+  .pagination { flex-wrap: wrap; justify-content: center; gap: 8px; }
+}
