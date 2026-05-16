@@ -16,6 +16,16 @@ import {
 } from 'lucide-react';
 import { PYQ_DATA } from '../data/resourceData';
 
+const trackPdfClick = (pdfTitle, examName) => {
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'view_pdf', {
+      'event_category': 'Resources',
+      'event_label': `${examName} - ${pdfTitle}`,
+      'transport_type': 'beacon'
+    });
+  }
+};
+
 const PYQResourcesPage = () => {
   const { examName } = useParams();
   const location = useLocation();
@@ -203,7 +213,13 @@ const PYQResourcesPage = () => {
                         <CheckCircle2 size={16} /> <span>Solve Paper</span>
                       </Link>
                     )}
-                    <a href={pdf.url} target={pdf.openInSamePage ? "_self" : "_blank"} rel="noopener noreferrer" className={styles.downloadBtn}>
+                    <a 
+                      href={pdf.url} 
+                      onClick={() => trackPdfClick(pdf.title, formattedExamName)}
+                      target={pdf.openInSamePage ? "_self" : "_blank"} 
+                      rel="noopener noreferrer" 
+                      className={styles.downloadBtn}
+                    >
                       {pdf.openInSamePage ? <BookOpen size={16} /> : <Download size={16} />} 
                       <span>{pdf.openInSamePage ? "Open Paper" : "Open PDF"}</span>
                     </a>

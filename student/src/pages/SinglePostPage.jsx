@@ -59,9 +59,13 @@ export default function SinglePostPage() {
   const { slug } = useParams();
 
   // Hooks in fixed order
-  const [post, setPost] = useState(null);
+  const initialPost = typeof window !== 'undefined' && window.__INITIAL_POST_DATA__ && window.__INITIAL_POST_DATA__.slug === slug 
+    ? window.__INITIAL_POST_DATA__ 
+    : null;
+
+  const [post, setPost] = useState(initialPost);
   const [recentPosts, setRecentPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialPost);
   const [toc, setToc] = useState([]);
   const contentRef = useRef(null);
 
@@ -82,15 +86,20 @@ export default function SinglePostPage() {
     (async () => {
       try {
         setLoading(true);
-        // Scroll to top on navigation
-        window.scrollTo({ top: 0, behavior: "instant" });
+        // Scroll to top on navigation if not initial load
+        if (!initialPost) {
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
 
-        const pRes = await api.get(`/posts/${slug}`);
-        const rRes = await api.get(`/posts?limit=6`);
+        const fetchPost = !initialPost ? api.get(`/posts/${slug}`) : Promise.resolve({ data: initialPost });
+        const fetchRecent = api.get(`/posts?limit=6`);
+
+        const [pRes, rRes] = await Promise.all([fetchPost, fetchRecent]);
 
         if (!ok) return;
 
         setPost(pRes.data);
+        if (typeof window !== 'undefined') window.__INITIAL_POST_DATA__ = null; // Clear it
 
         const arr = Array.isArray(rRes.data)
           ? rRes.data
