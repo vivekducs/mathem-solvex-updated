@@ -7,7 +7,7 @@ import styles from './AddQuestionPage.module.css';
 import toast from 'react-hot-toast';
 import MathLiveModal from '../components/MathLiveModal';
 import MathPreview from '../components/MathPreview'; // Reusing existing preview
-import { PlusCircle, Trash2, Eye, LayoutTemplate, Calculator, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Trash2, Eye, LayoutTemplate, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AddQuestionPage = () => {
@@ -15,7 +15,6 @@ const AddQuestionPage = () => {
     const isEditMode = Boolean(id);
     const auth = useAuth();
     const navigate = useNavigate();
-    const tinymceApiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
     const [formData, setFormData] = useState({
         questionType: 'PYQ', exam: 'NIMCET', subject: '', topic: '', year: new Date().getFullYear(),
@@ -167,10 +166,7 @@ const AddQuestionPage = () => {
         setIsMathModalOpen(true);
     };
 
-    const handleInsertMath = (latexString) => {
-        // latexString comes as \((...)\) from MathLiveModal
-        // We want just the inner latex for our data-latex attribute
-        const latex = latexString.replace(/^\\\(/, '').replace(/\\\)$/, '');
+    const handleInsertMath = (latex) => {
         if (mathCallback) {
             mathCallback(latex);
         }
@@ -256,9 +252,6 @@ const AddQuestionPage = () => {
                         <div className={styles.cardSection}>
                             <div className={styles.sectionHeader}>
                                 <h2 className={styles.sectionTitle}>Question Content</h2>
-                                <button type="button" className={styles.mathBtn} onClick={() => openMathModal('questionText')}>
-                                    <Calculator size={18} /> Visual Math Editor
-                                </button>
                             </div>
                             <div className={styles.editorWrapper}>
                                 <RichTextEditor 
@@ -293,9 +286,6 @@ const AddQuestionPage = () => {
                                                 </label>
                                             </div>
                                             <div className={styles.optionActions}>
-                                                <button type="button" className={styles.mathBtnSmall} onClick={() => openMathModal('options', index)}>
-                                                    <Calculator size={14} /> Math
-                                                </button>
                                                 <button type="button" className={styles.removeBtn} onClick={() => removeOption(index)} title="Remove Option">
                                                     <Trash2 size={18} />
                                                 </button>
@@ -326,9 +316,6 @@ const AddQuestionPage = () => {
                         <div className={styles.cardSection}>
                             <div className={styles.sectionHeader}>
                                 <h2 className={styles.sectionTitle}>Explanation & Video</h2>
-                                <button type="button" className={styles.mathBtn} onClick={() => openMathModal('explanationText')}>
-                                    <Calculator size={18} /> Visual Math Editor
-                                </button>
                             </div>
                             <div className={styles.inputGroup}>
                                 <input type="text" name="videoURL" value={formData.videoURL} onChange={handleInputChange} placeholder="Video Solution URL (YouTube link)" />
