@@ -12,7 +12,6 @@ const AddPostPage = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
-  const editorRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -34,8 +33,6 @@ const AddPostPage = () => {
   // New: independent sticky admin panel with tabs
   const [activeTab, setActiveTab] = useState('publish'); // 'publish' | 'media' | 'seo'
   const [drawerOpen, setDrawerOpen] = useState(false);   // mobile bottom drawer
-
-  const tinymceApiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
   // Fetch post data
   useEffect(() => {
@@ -136,8 +133,6 @@ const AddPostPage = () => {
     return null;
   };
 
-  const insertTOC = () => editorRef.current?.execCommand('mceInsertContent', false, '<div class="mce-toc"></div>');
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.title.trim().length < 5) { toast.error('Title must be at least 5 characters.'); return; }
@@ -199,10 +194,6 @@ const AddPostPage = () => {
           </div>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={styles.secondaryBtn} title="Insert Table of Contents" onClick={insertTOC}>
-            <ListOrdered size={16} />
-            Insert TOC
-          </button>
           <button type="submit" className={styles.submitBtn} disabled={loading}>
             <Save size={18} />
             {loading ? 'Saving…' : isEditMode ? 'Update Post' : 'Publish Post'}
@@ -235,16 +226,6 @@ const AddPostPage = () => {
                 <input type="checkbox" checked={pageMode} onChange={() => setPageMode(v => !v)} />
                 <span>Document layout (margin + border + ruler)</span>
               </label>
-
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={() => editorRef.current?.execCommand('mceInsertContent', false, '<hr class="mce-pagebreak" />')}
-                title="Insert Page Break"
-              >
-                <FilePlus2 size={16} />
-                Page Break
-              </button>
             </div>
 
             <RichTextEditor
@@ -255,6 +236,7 @@ const AddPostPage = () => {
               }}
               onImageUpload={handleEditorImageUpload}
               placeholder="Write your amazing post here..."
+              editorType="blog"
             />
           </fieldset>
         </main>
