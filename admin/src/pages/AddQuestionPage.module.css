@@ -411,6 +411,20 @@
     margin-bottom: 25px;
 }
 
+.previewImageWrap {
+    margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.previewImageWrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+
 .previewOptionsGrid {
     display: grid;
     gap: 12px;
@@ -425,6 +439,24 @@
     border: 1px solid #e2e8f0;
     background: #f8fafc;
 }
+
+.previewOptContent {
+    flex: 1;
+}
+
+.previewOptionImage {
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 300px;
+}
+
+.previewOptionImage img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 
 .previewOptionboxCorrect {
     background: #f0fdf4;

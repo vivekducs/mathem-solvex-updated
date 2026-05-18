@@ -28,8 +28,10 @@ const AddQuestionPage = () => {
     });
 
     const [imageFiles, setImageFiles] = useState({});
+    const [imagePreviews, setImagePreviews] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
     
     // MathLive State
     const [isMathModalOpen, setIsMathModalOpen] = useState(false);
@@ -63,6 +65,21 @@ const AddQuestionPage = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleEditorImageUpload = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await api.post('/posts/upload-image', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return res.data.location;
+        } catch (err) {
+            toast.error('Image upload failed');
+            throw err;
+        }
+    };
+
+
     const handleEditorChange = (content, fieldName, optionIndex = null) => {
         if (optionIndex !== null) {
             const newOptions = [...formData.options];
@@ -77,8 +94,12 @@ const AddQuestionPage = () => {
         const { name, files } = e.target;
         if (files[0]) {
             setImageFiles(prev => ({ ...prev, [name]: files[0] }));
+            // Generate local preview URL
+            const url = URL.createObjectURL(files[0]);
+            setImagePreviews(prev => ({ ...prev, [name]: url }));
         }
     };
+
 
     const handleCorrectOptionChange = (index) => {
         const newOptions = formData.options.map((opt, i) => ({ ...opt, isCorrect: i === index }));
@@ -258,6 +279,7 @@ const AddQuestionPage = () => {
                                     value={formData.questionText} 
                                     onChange={(c) => handleEditorChange(c, 'questionText')} 
                                     onMathClick={openMathModal}
+                                    onImageUpload={handleEditorImageUpload}
                                     placeholder="Type your question here..."
                                 />
                             </div>
@@ -296,6 +318,7 @@ const AddQuestionPage = () => {
                                             value={option.text} 
                                             onChange={(c) => handleEditorChange(c, 'text', index)} 
                                             onMathClick={openMathModal}
+                                            onImageUpload={handleEditorImageUpload}
                                             placeholder={`Option ${String.fromCharCode(65 + index)} content...`}
                                         />
                                         
@@ -325,6 +348,7 @@ const AddQuestionPage = () => {
                                     value={formData.explanationText} 
                                     onChange={(c) => handleEditorChange(c, 'explanationText')} 
                                     onMathClick={openMathModal}
+                                    onImageUpload={handleEditorImageUpload}
                                     placeholder="Explain the solution step by step..."
                                 />
                             </div>
@@ -360,24 +384,44 @@ const AddQuestionPage = () => {
                                     </div>
                                     
                                     <div className={styles.previewQText}>
-                                        <MathPreview latexString={formData.questionText || '<p className="text-gray-400">Question text will appear here...</p>'} />
+                                        <MathPreview content={formData.questionText || '<p class="text-gray-400">Question text will appear here...</p>'} />
+                                        {(imagePreviews.questionImage || formData.questionImageURL) && (
+                                            <div className={styles.previewImageWrap}>
+                                                <img src={imagePreviews.questionImage || formData.questionImageURL} alt="Question" />
+                                            </div>
+                                        )}
                                     </div>
+
 
                                     <div className={styles.previewOptionsGrid}>
                                         {formData.options.map((opt, i) => (
                                             <div key={i} className={`${styles.previewOptionbox} ${opt.isCorrect ? styles.previewOptionboxCorrect : ''}`}>
                                                 <span className={styles.previewOptLabel}>{String.fromCharCode(65 + i)}</span>
-                                                <MathPreview latexString={opt.text || '<span class="text-gray-300">Option text...</span>'} />
+                                                <div className={styles.previewOptContent}>
+                                                    <MathPreview content={opt.text || '<span class="text-gray-300">Option text...</span>'} />
+                                                    {(imagePreviews[`option_${i}_image`] || opt.imageURL) && (
+                                                        <div className={styles.previewOptionImage}>
+                                                            <img src={imagePreviews[`option_${i}_image`] || opt.imageURL} alt={`Option ${i}`} />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
+
                                     
                                     {formData.explanationText && (
                                         <div className={styles.previewExplanation}>
                                             <h4>Explanation:</h4>
-                                            <MathPreview latexString={formData.explanationText} />
+                                            <MathPreview content={formData.explanationText} />
+                                            {(imagePreviews.explanationImage || formData.explanationImageURL) && (
+                                                <div className={styles.previewImageWrap}>
+                                                    <img src={imagePreviews.explanationImage || formData.explanationImageURL} alt="Explanation" />
+                                                </div>
+                                            )}
                                         </div>
                                     )}
+
                                 </div>
                             </div>
                         </motion.div>

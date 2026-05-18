@@ -5,7 +5,8 @@ import {
   Calculator, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Underline as UnderlineIcon, Heading1, Heading2, Heading3,
   Code2, Strikethrough, Highlighter, CheckSquare, Minus, Youtube,
-  Type, ALargeSmall
+  Type, ALargeSmall, Table as TableIcon, PlusSquare, Trash2, LayoutList,
+  ChevronDown
 } from 'lucide-react';
 import styles from './RichTextEditor.module.css';
 
@@ -294,22 +295,63 @@ const MenuBar = ({ editor, onImageUpload, onMathClick, isBlogMode }) => {
         <ToolbarButton onClick={addLink} isActive={editor.isActive('link')} title="Link">
           <LinkIcon size={18} />
         </ToolbarButton>
-        <button type="button" onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }} className={styles.toolbarBtn} title="Image">
+        <ToolbarButton 
+          onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }} 
+          isActive={false} 
+          title="Upload Image"
+        >
           <ImageIcon size={18} />
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            accept="image/*"
-            onChange={handleFileChange}
-          />
-        </button>
+        </ToolbarButton>
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          accept="image/*"
+          onChange={handleFileChange}
+        />
+
         <ToolbarButton onClick={addYoutubeVideo} isActive={editor.isActive('youtube')} title="YouTube Video">
           <Youtube size={18} />
         </ToolbarButton>
         <ToolbarButton onClick={addMath} isActive={false} title="Math Equation (LaTeX)">
           <Calculator size={18} />
         </ToolbarButton>
+      </div>
+
+      {/* Tables */}
+      <div className={styles.toolbarGroup}>
+        <ToolbarButton
+          onClick={(e) => handleAction(e, () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}
+          isActive={editor.isActive('table')}
+          title="Insert Table"
+        >
+          <TableIcon size={18} />
+        </ToolbarButton>
+        {editor.isActive('table') && (
+          <>
+            <ToolbarButton
+              onClick={(e) => handleAction(e, () => editor.chain().focus().addColumnAfter().run())}
+              isActive={false}
+              title="Add Column After"
+            >
+              <PlusSquare size={18} />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={(e) => handleAction(e, () => editor.chain().focus().addRowAfter().run())}
+              isActive={false}
+              title="Add Row After"
+            >
+              <LayoutList size={18} />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={(e) => handleAction(e, () => editor.chain().focus().deleteTable().run())}
+              isActive={false}
+              title="Delete Table"
+            >
+              <Trash2 size={18} />
+            </ToolbarButton>
+          </>
+        )}
       </div>
 
       {/* History */}

@@ -16,6 +16,11 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import Youtube from '@tiptap/extension-youtube';
 import CharacterCount from '@tiptap/extension-character-count';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
+
 
 import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
@@ -158,9 +163,7 @@ const getEditorExtensions = (isBlogMode) => {
       // In blog mode, StarterKit strips unknown styles/tags automatically,
       // providing clean HTML and removing Word-pasted pollution.
     }),
-    Underline,
     Image.configure({ allowBase64: !isBlogMode }),
-    Link.configure({ openOnClick: false }),
     Placeholder.configure({ placeholder: 'Start typing...' }),
     CodeBlockLowlight.configure({ lowlight }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -175,8 +178,13 @@ const getEditorExtensions = (isBlogMode) => {
       FontSize,
       Color,
     ]),
+
     MathNode,
     MathBlockNode,
+    Table.configure({ resizable: true }),
+    TableRow,
+    TableHeader,
+    TableCell,
   ];
 };
 
@@ -205,6 +213,30 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Start typing...', onIm
       setTimeout(() => {
         isUpdatingRef.current = false;
       }, 0);
+    },
+    editorProps: {
+      handlePaste: (view, event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const imageItem = items.find(item => item.type.startsWith('image/'));
+        if (imageItem) {
+          const file = imageItem.getAsFile();
+          if (file) {
+            handleImageUpload(file);
+            return true; // handled
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            handleImageUpload(file);
+            return true; // handled
+          }
+        }
+        return false;
+      },
     },
   });
 
@@ -354,11 +386,11 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Start typing...', onIm
       {!showSource ? (
         <div className={styles.editorContentWrapper}>
           <div className={styles.editorContent} onDrop={(e) => {
-              e.preventDefault();
-              const files = e.dataTransfer.files;
-              if (files.length > 0 && files[0].type.startsWith('image/')) {
-                handleImageUpload(files[0]);
-              }
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+              handleImageUpload(files[0]);
+            }
           }}>
             <EditorContent editor={editor} />
           </div>
