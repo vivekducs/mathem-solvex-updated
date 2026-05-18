@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const NodeCache = require('node-cache');
 const Question = require('../models/Question.js'); // Ensure this path is correct
 const cloudinary = require('../config/cloudinary.js'); // Your specified path
+const { deleteCloudinaryImage } = require('../utils/cloudinaryUtils.js');
+
 
 // ─── Application-level in-memory cache ───────────────────────────────────────
 // Significantly reduces MongoDB load for high-traffic public endpoints.
@@ -25,24 +27,8 @@ const setCache = (res, seconds = 60, sMax = 300) => {
     res.set('Cache-Control', `public, max-age=${seconds}, s-maxage=${sMax}, stale-while-revalidate=600`);
 };
 
-// --- Helper for deleting old images from Cloudinary ---
-const deleteCloudinaryImage = async (imageUrl, folder) => {
-    if (imageUrl) {
-        // Example URL: https://res.cloudinary.com/yourcloudname/image/upload/v1678901234/folder/publicId.png
-        const parts = imageUrl.split('/');
-        // Get 'publicId.png' from the URL
-        const publicIdWithExtension = parts[parts.length - 1];
-        // Remove '.png' to get 'publicId'
-        const publicId = publicIdWithExtension.split('.')[0];
+// Helper for deleting old images from Cloudinary now imported from utils
 
-        try {
-            await cloudinary.uploader.destroy(`${folder}/${publicId}`);
-            console.log(`Cloudinary image deleted: ${folder}/${publicId}`);
-        } catch (error) {
-            console.error(`Failed to delete Cloudinary image ${folder}/${publicId}:`, error);
-        }
-    }
-};
 
 /**
  * GET /api/questions (Admin/Protected)
@@ -374,27 +360,27 @@ exports.updateQuestion = async (req, res) => {
 
         // --- Handle main question image ---
         if (req.files && req.files.questionImage && req.files.questionImage.length > 0) { // New image uploaded
-            await deleteCloudinaryImage(question.questionImageURL, 'maarula-questions');
+            await deleteCloudinaryImage(question.questionImageURL);
             const result = await cloudinary.uploader.upload(req.files.questionImage[0].path, {
                 folder: 'maarula-questions'
             });
             question.questionImageURL = result.secure_url;
         } else if (clearQuestionImage === 'true' && question.questionImageURL) {
             // Frontend explicitly says to clear the image
-            await deleteCloudinaryImage(question.questionImageURL, 'maarula-questions');
+            await deleteCloudinaryImage(question.questionImageURL);
             question.questionImageURL = '';
         }
 
         // --- Handle explanation image ---
         if (req.files && req.files.explanationImage && req.files.explanationImage.length > 0) { // New image uploaded
-            await deleteCloudinaryImage(question.explanationImageURL, 'maarula-explanations');
+            await deleteCloudinaryImage(question.explanationImageURL);
             const result = await cloudinary.uploader.upload(req.files.explanationImage[0].path, {
                 folder: 'maarula-explanations'
             });
             question.explanationImageURL = result.secure_url;
         } else if (clearExplanationImage === 'true' && question.explanationImageURL) {
             // Frontend explicitly says to clear the image
-            await deleteCloudinaryImage(question.explanationImageURL, 'maarula-explanations');
+            await deleteCloudinaryImage(question.explanationImageURL);
             question.explanationImageURL = '';
         }
 
@@ -410,7 +396,7 @@ exports.updateQuestion = async (req, res) => {
             // 1. Handle new option image upload
             if (req.files && req.files[optionImageKey] && req.files[optionImageKey].length > 0) {
                 if (oldImageUrlForThisIndex) { // Delete old image if it existed for this option
-                    await deleteCloudinaryImage(oldImageUrlForThisIndex, 'maarula-options'); 
+                    await deleteCloudinaryImage(oldImageUrlForThisIndex); 
                 }
                 const result = await cloudinary.uploader.upload(req.files[optionImageKey][0].path, {
                     folder: `maarula-options`
@@ -419,7 +405,7 @@ exports.updateQuestion = async (req, res) => {
             } 
             // 2. Handle explicit clear request from frontend
             else if (req.body[`clearOption_${i}_Image`] === 'true' && (newOptionData.imageURL || oldImageUrlForThisIndex)) {
-                 await deleteCloudinaryImage(newOptionData.imageURL || oldImageUrlForThisIndex, 'maarula-options');
+                 await deleteCloudinaryImage(newOptionData.imageURL || oldImageUrlForThisIndex);
                  newOptionData.imageURL = ''; // Clear the URL in the data
             }
             // 3. If no new upload and no clear, retain existing image URL from parsedOptions
@@ -437,7 +423,7 @@ exports.updateQuestion = async (req, res) => {
         
         for (const url of currentImageUrlsInDB) {
             if (!finalImageUrls.has(url)) { // If an old image URL is no longer in the final options
-                await deleteCloudinaryImage(url, 'maarula-options');
+                await deleteCloudinaryImage(url);
             }
         }
 
@@ -474,10 +460,10 @@ exports.deleteQuestion = async (req, res) => {
         }
 
         // Delete associated images from Cloudinary before deleting the question
-        await deleteCloudinaryImage(question.questionImageURL, 'maarula-questions');
-        await deleteCloudinaryImage(question.explanationImageURL, 'maarula-explanations');
+        await deleteCloudinaryImage(question.questionImageURL);
+        await deleteCloudinaryImage(question.explanationImageURL);
         for (const option of question.options) {
-            await deleteCloudinaryImage(option.imageURL, 'maarula-options');
+            await deleteCloudinaryImage(option.imageURL);
         }
 
         await Question.findByIdAndDelete(id);

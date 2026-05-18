@@ -1,5 +1,7 @@
 const Post = require('../models/Post');
 const cloudinary = require('../config/cloudinary');
+const { deleteCloudinaryImage, extractCloudinaryUrlsFromHtml } = require('../utils/cloudinaryUtils');
+
 
 // Helper: slugify title consistently
 const generateSlug = (title = '') =>
@@ -129,15 +131,31 @@ exports.updatePost = async (req, res) => {
       updateData.slug = newSlug;
     }
 
+    // If content changes, find orphaned images
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    if (updateData.content) {
+      const oldUrls = extractCloudinaryUrlsFromHtml(post.content);
+      const newUrls = extractCloudinaryUrlsFromHtml(updateData.content);
+      const orphanedUrls = oldUrls.filter(url => !newUrls.includes(url));
+      for (const url of orphanedUrls) {
+        await deleteCloudinaryImage(url);
+      }
+    }
+
     // New featured image
     if (req.file) {
+      if (post.featuredImage) {
+        await deleteCloudinaryImage(post.featuredImage);
+      }
       const result = await cloudinary.uploader.upload(req.file.path);
       updateData.featuredImage = result.secure_url;
     }
 
     const updated = await Post.findByIdAndUpdate(req.params.id, updateData, { new: true, lean: true });
-    if (!updated) return res.status(404).json({ message: 'Post not found' });
     res.status(200).json(updated);
+
   } catch (e) {
     console.error('updatePost error:', e);
     res.status(500).json({ message: 'Server error updating post' });
@@ -149,8 +167,18 @@ exports.deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    if (post.featuredImage) {
+      await deleteCloudinaryImage(post.featuredImage);
+    }
+    const contentUrls = extractCloudinaryUrlsFromHtml(post.content);
+    for (const url of contentUrls) {
+      await deleteCloudinaryImage(url);
+    }
+
     await post.deleteOne();
     res.status(200).json({ message: 'Post deleted successfully' });
+
   } catch (e) {
     console.error('deletePost error:', e);
     res.status(500).json({ message: 'Server error deleting post' });
