@@ -20,9 +20,9 @@ const AddQuestionPage = () => {
         questionType: 'PYQ', exam: 'NIMCET', subject: '', topic: '', year: new Date().getFullYear(),
         questionText: '', explanationText: '', videoURL: '', difficulty: 'Medium',
         options: [
-            { text: '', imageURL: '', isCorrect: true }, 
+            { text: '', imageURL: '', isCorrect: true },
             { text: '', imageURL: '', isCorrect: false },
-            { text: '', imageURL: '', isCorrect: false }, 
+            { text: '', imageURL: '', isCorrect: false },
             { text: '', imageURL: '', isCorrect: false },
         ],
     });
@@ -32,13 +32,15 @@ const AddQuestionPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    
+
     // MathLive State
     const [isMathModalOpen, setIsMathModalOpen] = useState(false);
     const [mathCallback, setMathCallback] = useState(null);
-    
+
     // Split pane state
     const [showPreviewPane, setShowPreviewPane] = useState(window.innerWidth > 1024);
+
+    const [editorMode, setEditorMode] = useState('latex'); // 'latex' or 'rich'
 
     useEffect(() => {
         const handleResize = () => setShowPreviewPane(window.innerWidth > 1024);
@@ -52,7 +54,7 @@ const AddQuestionPage = () => {
             api.get(`/questions/${id}`)
                 .then(res => {
                     const data = res.data;
-                    if(!data.questionType) data.questionType = data.year ? 'PYQ' : 'Practice';
+                    if (!data.questionType) data.questionType = data.year ? 'PYQ' : 'Practice';
                     setFormData(data);
                 })
                 .catch(err => setError('Failed to load question data.'))
@@ -125,7 +127,7 @@ const AddQuestionPage = () => {
             }
             return { ...prev, options: newOptions };
         });
-        
+
         // Cleanup removed option images from state to avoid sending garbage
         const newImageFiles = { ...imageFiles };
         delete newImageFiles[`option_${indexToRemove}_image`];
@@ -137,7 +139,7 @@ const AddQuestionPage = () => {
         setLoading(true);
         setError('');
         const submissionData = new FormData();
-        
+
         // Append text fields
         submissionData.append('questionType', formData.questionType);
         submissionData.append('exam', formData.exam);
@@ -151,7 +153,7 @@ const AddQuestionPage = () => {
         submissionData.append('videoURL', formData.videoURL);
         submissionData.append('difficulty', formData.difficulty);
         submissionData.append('options', JSON.stringify(formData.options));
-        
+
         // Append files
         for (const key in imageFiles) {
             if (imageFiles[key]) {
@@ -169,10 +171,10 @@ const AddQuestionPage = () => {
                 toast.success('Question added successfully!');
                 setFormData(prev => ({
                     ...prev, questionText: '', explanationText: '', videoURL: '',
-                    options: prev.options.map(opt => ({...opt, text: '', imageURL: ''}))
+                    options: prev.options.map(opt => ({ ...opt, text: '', imageURL: '' }))
                 }));
                 setImageFiles({});
-                window.scrollTo(0,0);
+                window.scrollTo(0, 0);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save question.');
@@ -202,8 +204,8 @@ const AddQuestionPage = () => {
                     <h1 className={styles.pageTitle}>{isEditMode ? 'Edit Question ✨' : 'Add New Question ✨'}</h1>
                     <p className={styles.pageSubtitle}>Create rich mathematical questions with the visual editor.</p>
                 </div>
-                <button 
-                    className={styles.togglePreviewBtn} 
+                <button
+                    className={styles.togglePreviewBtn}
                     onClick={() => setShowPreviewPane(!showPreviewPane)}
                 >
                     <LayoutTemplate size={20} />
@@ -212,7 +214,7 @@ const AddQuestionPage = () => {
             </div>
 
             <div className={`${styles.mainContainer} ${showPreviewPane ? styles.splitMode : ''}`}>
-                
+
                 {/* Editor Pane */}
                 <div className={styles.editorPane}>
                     <form onSubmit={handleSubmit} className={styles.formContainer}>
@@ -244,6 +246,7 @@ const AddQuestionPage = () => {
                                         <option value="MAH-CET">MAH-CET</option>
                                         <option value="JAMIA">JAMIA</option>
                                         <option value="JEE">JEE</option>
+                                        <option value="IGDTUW">IGDTUW</option>
                                     </select>
                                 </div>
                                 <div className={styles.inputGroup}>
@@ -273,18 +276,38 @@ const AddQuestionPage = () => {
                         <div className={styles.cardSection}>
                             <div className={styles.sectionHeader}>
                                 <h2 className={styles.sectionTitle}>Question Content</h2>
+                                <div className={styles.editorToggle}>
+                                    <label className={styles.radioLabel}>
+                                        <input type="radio" checked={editorMode === 'latex'} onChange={() => setEditorMode('latex')} />
+                                        Raw LaTeX
+                                    </label>
+                                    <label className={styles.radioLabel}>
+                                        <input type="radio" checked={editorMode === 'rich'} onChange={() => setEditorMode('rich')} />
+                                        Rich Text
+                                    </label>
+                                </div>
                             </div>
                             <div className={styles.editorWrapper}>
-                                <RichTextEditor 
-                                    value={formData.questionText} 
-                                    onChange={(c) => handleEditorChange(c, 'questionText')} 
-                                    onMathClick={openMathModal}
-                                    onImageUpload={handleEditorImageUpload}
-                                    placeholder="Type your question here..."
-                                />
+                                {editorMode === 'latex' ? (
+                                    <textarea
+                                        className={styles.rawTextarea}
+                                        value={formData.questionText}
+                                        onChange={(e) => handleEditorChange(e.target.value, 'questionText')}
+                                        placeholder="Type your question here (LaTeX allowed)..."
+                                        rows={6}
+                                    />
+                                ) : (
+                                    <RichTextEditor
+                                        value={formData.questionText}
+                                        onChange={(c) => handleEditorChange(c, 'questionText')}
+                                        onMathClick={openMathModal}
+                                        onImageUpload={handleEditorImageUpload}
+                                        placeholder="Type your question here..."
+                                    />
+                                )}
                             </div>
                             <div className={styles.fileInputWrapper}>
-                                <label><ImageIcon size={18}/> Image for Question (Optional)</label>
+                                <label><ImageIcon size={18} /> Image for Question (Optional)</label>
                                 <input type="file" name="questionImage" onChange={handleFileChange} accept="image/*" />
                             </div>
                         </div>
@@ -294,8 +317,8 @@ const AddQuestionPage = () => {
                             <h2 className={styles.sectionTitle}>Options</h2>
                             <AnimatePresence>
                                 {formData.options.map((option, index) => (
-                                    <motion.div 
-                                        key={index} 
+                                    <motion.div
+                                        key={index}
                                         className={`${styles.optionBox} ${option.isCorrect ? styles.correctOptionBox : ''}`}
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                                     >
@@ -313,23 +336,33 @@ const AddQuestionPage = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        
-                                        <RichTextEditor 
-                                            value={option.text} 
-                                            onChange={(c) => handleEditorChange(c, 'text', index)} 
-                                            onMathClick={openMathModal}
-                                            onImageUpload={handleEditorImageUpload}
-                                            placeholder={`Option ${String.fromCharCode(65 + index)} content...`}
-                                        />
-                                        
+
+                                        {editorMode === 'latex' ? (
+                                            <textarea
+                                                className={styles.rawTextarea}
+                                                value={option.text}
+                                                onChange={(e) => handleEditorChange(e.target.value, 'text', index)}
+                                                placeholder={`Option ${String.fromCharCode(65 + index)} content...`}
+                                                rows={3}
+                                            />
+                                        ) : (
+                                            <RichTextEditor
+                                                value={option.text}
+                                                onChange={(c) => handleEditorChange(c, 'text', index)}
+                                                onMathClick={openMathModal}
+                                                onImageUpload={handleEditorImageUpload}
+                                                placeholder={`Option ${String.fromCharCode(65 + index)} content...`}
+                                            />
+                                        )}
+
                                         <div className={styles.fileInputWrapperSmall}>
-                                            <label><ImageIcon size={14}/> Option Image (Optional)</label>
+                                            <label><ImageIcon size={14} /> Option Image (Optional)</label>
                                             <input type="file" name={`option_${index}_image`} onChange={handleFileChange} accept="image/*" />
                                         </div>
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
-                            
+
                             <button type="button" className={styles.addOptionBtn} onClick={addOption}>
                                 <PlusCircle size={20} /> Add Another Option
                             </button>
@@ -344,13 +377,23 @@ const AddQuestionPage = () => {
                                 <input type="text" name="videoURL" value={formData.videoURL} onChange={handleInputChange} placeholder="Video Solution URL (YouTube link)" />
                             </div>
                             <div className={styles.editorWrapper}>
-                                <RichTextEditor 
-                                    value={formData.explanationText} 
-                                    onChange={(c) => handleEditorChange(c, 'explanationText')} 
-                                    onMathClick={openMathModal}
-                                    onImageUpload={handleEditorImageUpload}
-                                    placeholder="Explain the solution step by step..."
-                                />
+                                {editorMode === 'latex' ? (
+                                    <textarea
+                                        className={styles.rawTextarea}
+                                        value={formData.explanationText}
+                                        onChange={(e) => handleEditorChange(e.target.value, 'explanationText')}
+                                        placeholder="Explain the solution step by step..."
+                                        rows={6}
+                                    />
+                                ) : (
+                                    <RichTextEditor
+                                        value={formData.explanationText}
+                                        onChange={(c) => handleEditorChange(c, 'explanationText')}
+                                        onMathClick={openMathModal}
+                                        onImageUpload={handleEditorImageUpload}
+                                        placeholder="Explain the solution step by step..."
+                                    />
+                                )}
                             </div>
                         </div>
 
@@ -366,7 +409,7 @@ const AddQuestionPage = () => {
                 {/* Live Preview Pane */}
                 <AnimatePresence>
                     {showPreviewPane && (
-                        <motion.div 
+                        <motion.div
                             className={styles.previewPane}
                             initial={{ x: 100, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
@@ -382,9 +425,9 @@ const AddQuestionPage = () => {
                                         {formData.questionType === 'PYQ' && <span className={styles.badgeGray}>{formData.year}</span>}
                                         <span className={styles.badgePurple}>{formData.questionType}</span>
                                     </div>
-                                    
+
                                     <div className={styles.previewQText}>
-                                        <MathPreview content={formData.questionText || '<p class="text-gray-400">Question text will appear here...</p>'} />
+                                        <MathPreview content={formData.questionText || '<p class="text-gray-400">Question text will appear here...</p>'} style={{ whiteSpace: 'pre-wrap' }} />
                                         {(imagePreviews.questionImage || formData.questionImageURL) && (
                                             <div className={styles.previewImageWrap}>
                                                 <img src={imagePreviews.questionImage || formData.questionImageURL} alt="Question" />
@@ -398,7 +441,7 @@ const AddQuestionPage = () => {
                                             <div key={i} className={`${styles.previewOptionbox} ${opt.isCorrect ? styles.previewOptionboxCorrect : ''}`}>
                                                 <span className={styles.previewOptLabel}>{String.fromCharCode(65 + i)}</span>
                                                 <div className={styles.previewOptContent}>
-                                                    <MathPreview content={opt.text || '<span class="text-gray-300">Option text...</span>'} />
+                                                    <MathPreview content={opt.text || '<span class="text-gray-300">Option text...</span>'} style={{ whiteSpace: 'pre-wrap' }} />
                                                     {(imagePreviews[`option_${i}_image`] || opt.imageURL) && (
                                                         <div className={styles.previewOptionImage}>
                                                             <img src={imagePreviews[`option_${i}_image`] || opt.imageURL} alt={`Option ${i}`} />
@@ -409,11 +452,11 @@ const AddQuestionPage = () => {
                                         ))}
                                     </div>
 
-                                    
+
                                     {formData.explanationText && (
                                         <div className={styles.previewExplanation}>
                                             <h4>Explanation:</h4>
-                                            <MathPreview content={formData.explanationText} />
+                                            <MathPreview content={formData.explanationText} style={{ whiteSpace: 'pre-wrap' }} />
                                             {(imagePreviews.explanationImage || formData.explanationImageURL) && (
                                                 <div className={styles.previewImageWrap}>
                                                     <img src={imagePreviews.explanationImage || formData.explanationImageURL} alt="Explanation" />
@@ -430,10 +473,10 @@ const AddQuestionPage = () => {
 
             </div>
 
-            <MathLiveModal 
-                isOpen={isMathModalOpen} 
-                onClose={() => setIsMathModalOpen(false)} 
-                onInsert={handleInsertMath} 
+            <MathLiveModal
+                isOpen={isMathModalOpen}
+                onClose={() => setIsMathModalOpen(false)}
+                onInsert={handleInsertMath}
             />
         </div>
     );

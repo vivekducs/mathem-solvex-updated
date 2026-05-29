@@ -198,6 +198,30 @@
     margin-bottom: 15px;
 }
 
+/* Raw Editor Mode Toggle */
+.editorToggle {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.rawTextarea {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    background: #f8fafc;
+    font-size: 1rem;
+    font-family: monospace;
+    color: #1e293b;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.rawTextarea:focus {
+    background: white;
+}
+
 /* Options */
 .optionBox {
     background: #f8fafc;

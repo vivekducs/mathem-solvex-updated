@@ -289,12 +289,9 @@ export default function SinglePostPage() {
         <meta name="twitter:image" content={imageUrl} />
 
         {/* JSON-LD */}
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
       </Helmet>
 
       <div className={styles.page}>
