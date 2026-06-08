@@ -246,8 +246,10 @@ const AddPostPage = () => {
           {/* Tab bar */}
           <div className={styles.tabBar} role="tablist" aria-label="Admin panel">
             <button
+              id="tab-publish"
               type="button"
               role="tab"
+              aria-controls="panel-publish"
               aria-selected={activeTab === 'publish'}
               className={`${styles.tabBtn} ${activeTab === 'publish' ? styles.tabActive : ''}`}
               onClick={() => setActiveTab('publish')}
@@ -256,8 +258,10 @@ const AddPostPage = () => {
               <Settings2 size={16} /> <span>Publish</span>
             </button>
             <button
+              id="tab-media"
               type="button"
               role="tab"
+              aria-controls="panel-media"
               aria-selected={activeTab === 'media'}
               className={`${styles.tabBtn} ${activeTab === 'media' ? styles.tabActive : ''}`}
               onClick={() => setActiveTab('media')}
@@ -266,8 +270,10 @@ const AddPostPage = () => {
               <ImagePlus size={16} /> <span>Media</span>
             </button>
             <button
+              id="tab-seo"
               type="button"
               role="tab"
+              aria-controls="panel-seo"
               aria-selected={activeTab === 'seo'}
               className={`${styles.tabBtn} ${activeTab === 'seo' ? styles.tabActive : ''}`}
               onClick={() => setActiveTab('seo')}
@@ -281,11 +287,12 @@ const AddPostPage = () => {
           <div className={styles.dockScroll}>
             {/* PUBLISH */}
             {activeTab === 'publish' && (
-              <div className={styles.card}>
+              <div id="panel-publish" role="tabpanel" aria-labelledby="tab-publish" className={styles.card}>
                 <legend className={styles.cardTitle}>Publish</legend>
                 <div className={styles.inputGroup}>
-                  <label>Category</label>
+                  <label htmlFor="category">Category</label>
                   <select
+                    id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
@@ -311,7 +318,7 @@ const AddPostPage = () => {
 
             {/* MEDIA */}
             {activeTab === 'media' && (
-              <div className={styles.card}>
+              <div id="panel-media" role="tabpanel" aria-labelledby="tab-media" className={styles.card}>
                 <legend className={styles.cardTitle}>Media</legend>
 
                 <div
@@ -344,8 +351,9 @@ const AddPostPage = () => {
                 </div>
 
                 <div className={styles.inputGroup}>
-                  <label>YouTube/Instagram Video URL (Optional)</label>
+                  <label htmlFor="videoURL">YouTube/Instagram Video URL (Optional)</label>
                   <input
+                    id="videoURL"
                     type="text"
                     name="videoURL"
                     value={formData.videoURL}
@@ -359,12 +367,13 @@ const AddPostPage = () => {
 
             {/* SEO */}
             {activeTab === 'seo' && (
-              <div className={styles.card}>
+              <div id="panel-seo" role="tabpanel" aria-labelledby="tab-seo" className={styles.card}>
                 <legend className={styles.cardTitle}>SEO Settings</legend>
 
                 <div className={styles.inputGroup}>
-                  <label>Meta Description</label>
+                  <label htmlFor="metaDescription">Meta Description</label>
                   <textarea
+                    id="metaDescription"
                     name="metaDescription"
                     value={formData.metaDescription}
                     onChange={handleInputChange}
@@ -384,8 +393,9 @@ const AddPostPage = () => {
                 </div>
 
                 <div className={styles.inputGroup}>
-                  <label>Keywords (comma-separated)</label>
+                  <label htmlFor="keywords">Keywords (comma-separated)</label>
                   <input
+                    id="keywords"
                     type="text"
                     name="keywords"
                     value={formData.keywords}
@@ -422,23 +432,35 @@ const AddPostPage = () => {
       {/* Mobile bottom drawer for the admin panel */}
       <div className={`${styles.drawer} ${drawerOpen ? styles.drawerOpen : ''}`} role="dialog" aria-modal="true">
         <div className={styles.drawerHeader}>
-          <div className={styles.tabBarMobile}>
+          <div className={styles.tabBarMobile} role="tablist" aria-label="Admin panel mobile">
             <button
+              id="tab-publish-mobile"
               type="button"
+              role="tab"
+              aria-controls="panel-publish-mobile"
+              aria-selected={activeTab === 'publish'}
               className={`${styles.tabBtn} ${activeTab === 'publish' ? styles.tabActive : ''}`}
               onClick={() => setActiveTab('publish')}
             >
               <Settings2 size={16} /> <span>Publish</span>
             </button>
             <button
+              id="tab-media-mobile"
               type="button"
+              role="tab"
+              aria-controls="panel-media-mobile"
+              aria-selected={activeTab === 'media'}
               className={`${styles.tabBtn} ${activeTab === 'media' ? styles.tabActive : ''}`}
               onClick={() => setActiveTab('media')}
             >
               <ImagePlus size={16} /> <span>Media</span>
             </button>
             <button
+              id="tab-seo-mobile"
               type="button"
+              role="tab"
+              aria-controls="panel-seo-mobile"
+              aria-selected={activeTab === 'seo'}
               className={`${styles.tabBtn} ${activeTab === 'seo' ? styles.tabActive : ''}`}
               onClick={() => setActiveTab('seo')}
             >
@@ -450,11 +472,12 @@ const AddPostPage = () => {
         <div className={styles.drawerBody}>
           {/* Reuse same content as sidebar, based on activeTab */}
           {activeTab === 'publish' && (
-            <div className={styles.card}>
+            <div id="panel-publish-mobile" role="tabpanel" aria-labelledby="tab-publish-mobile" className={styles.card}>
               <legend className={styles.cardTitle}>Publish</legend>
               <div className={styles.inputGroup}>
-                <label>Category</label>
+                <label htmlFor="category-mobile">Category</label>
                 <select
+                  id="category-mobile"
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
@@ -474,7 +497,7 @@ const AddPostPage = () => {
           )}
 
           {activeTab === 'media' && (
-            <div className={styles.card}>
+            <div id="panel-media-mobile" role="tabpanel" aria-labelledby="tab-media-mobile" className={styles.card}>
               <legend className={styles.cardTitle}>Media</legend>
               <div
                 className={`${styles.imageUploader} ${dragActive ? styles.uploadActive : ''}`}
@@ -506,8 +529,9 @@ const AddPostPage = () => {
               </div>
 
               <div className={styles.inputGroup}>
-                <label>YouTube/Instagram Video URL (Optional)</label>
+                <label htmlFor="videoURL-mobile">YouTube/Instagram Video URL (Optional)</label>
                 <input
+                  id="videoURL-mobile"
                   type="text"
                   name="videoURL"
                   value={formData.videoURL}
@@ -520,11 +544,12 @@ const AddPostPage = () => {
           )}
 
           {activeTab === 'seo' && (
-            <div className={styles.card}>
+            <div id="panel-seo-mobile" role="tabpanel" aria-labelledby="tab-seo-mobile" className={styles.card}>
               <legend className={styles.cardTitle}>SEO Settings</legend>
               <div className={styles.inputGroup}>
-                <label>Meta Description</label>
+                <label htmlFor="metaDescription-mobile">Meta Description</label>
                 <textarea
+                  id="metaDescription-mobile"
                   name="metaDescription"
                   value={formData.metaDescription}
                   onChange={handleInputChange}
@@ -544,8 +569,9 @@ const AddPostPage = () => {
               </div>
 
               <div className={styles.inputGroup}>
-                <label>Keywords (comma-separated)</label>
+                <label htmlFor="keywords-mobile">Keywords (comma-separated)</label>
                 <input
+                  id="keywords-mobile"
                   type="text"
                   name="keywords"
                   value={formData.keywords}
