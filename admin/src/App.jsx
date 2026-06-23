@@ -12,6 +12,7 @@ import AddQuestionPage from './pages/AddQuestionPage';
 import ReportsPage from './pages/ReportsPage';
 import PostListPage from './pages/PostListPage';
 import AddPostPage from './pages/AddPostPage';
+import ManageTaxonomyPage from './pages/ManageTaxonomyPage';
 import AdminLayout from './components/AdminLayout';
 
 // This is a new helper component to handle the root URL
@@ -53,6 +54,7 @@ function App() {
                 <Route path="posts/add" element={<AddPostPage />} />
                 <Route path="posts/edit/:id" element={<AddPostPage />} />
                 <Route path="reports" element={<ReportsPage />} />
+                <Route path="taxonomy" element={<ManageTaxonomyPage />} />
             </Route>
         </Routes>
     </AuthProvider>

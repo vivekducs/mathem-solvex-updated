@@ -142,7 +142,7 @@ const LoginPage = () => {
 
             <div className={styles.loginContainer}>
                 <div className={styles.leftPanel}>
-                    <img src="/maarulalogo.png" alt="Maarula Classes Logo" className={styles.logo} />
+                    <img src="/maarulalogo.png" alt="Mathem Solvex Logo" className={styles.logo} />
                     <h2>Admin Portal</h2>
                     <h1>Control Center</h1>
                     <p>Enter your workspace to manage classes and students with lightning speed.</p>
@@ -150,10 +150,10 @@ const LoginPage = () => {
                 
                 <div className={styles.rightPanel} ref={rightPanelRef}>
                     <div className={styles.mouseGlow} style={{left: mousePos.x, top: mousePos.y}}></div>
-                    <div className={styles.floatingDecor} style={{top: '10%', left: '10%', animationDelay: '0s'}}>✨</div>
-                    <div className={styles.floatingDecor} style={{bottom: '20%', right: '15%', animationDelay: '-5s', fontSize: '3rem'}}>🚀</div>
-                    <div className={styles.floatingDecor} style={{top: '40%', right: '10%', animationDelay: '-10s'}}>💡</div>
-                    <div className={styles.floatingDecor} style={{bottom: '10%', left: '20%', animationDelay: '-15s', fontSize: '1.5rem'}}>🔥</div>
+                    <div className={styles.floatingDecor} style={{top: '10%', left: '10%', animationDelay: '0s'}}></div>
+                    <div className={styles.floatingDecor} style={{bottom: '20%', right: '15%', animationDelay: '-5s', fontSize: '3rem'}}></div>
+                    <div className={styles.floatingDecor} style={{top: '40%', right: '10%', animationDelay: '-10s'}}></div>
+                    <div className={styles.floatingDecor} style={{bottom: '10%', left: '20%', animationDelay: '-15s', fontSize: '1.5rem'}}></div>
 
                     {particles.map(p => (
                         <span 
@@ -161,7 +161,6 @@ const LoginPage = () => {
                             className={styles.happyParticle} 
                             style={{'--dx': `${p.dx}px`, '--dy': `${p.dy}px`, left: '50%', top: '50%'}}
                         >
-                            {p.emoji}
                         </span>
                     ))}
 
@@ -178,7 +177,7 @@ const LoginPage = () => {
                             <div className={styles.successMeter}>
                                 <div className={styles.successMeterFill} style={{width: `${calculateProgress()}%`}}></div>
                             </div>
-                            <h2 className={styles.title}>Welcome Back Admins! 👑</h2>
+                            <h2 className={styles.title}>Welcome Back Admins!</h2>
                             
                             {error && (
                                 <div className={styles.errorContainer}>
@@ -205,7 +204,6 @@ const LoginPage = () => {
                                         />
                                         <div className={styles.typingSkeleton}></div>
                                         <span className={styles.interactiveEmoji}>
-                                            {username ? '🧐' : '👋'}
                                         </span>
                                     </div>
                                 </div>
@@ -237,13 +235,11 @@ const LoginPage = () => {
                                         </button>
                                         <div className={styles.typingSkeleton}></div>
                                         <span className={styles.interactiveEmoji}>
-                                            {isDenyingPeek ? '🙅‍♂️' : (showPassword ? '😜' : '🙈')}
                                         </span>
                                     </div>
                                 </div>
                                 <div className={`${styles.recaptchaArea} ${isCaptchaVerified ? styles.verified : ''}`}>
                                      <div className={styles.robotAssistant}>
-                                         {isCaptchaVerified ? '👨‍💻' : '🤖'}
                                      </div>
                                      <div className={styles.securityLabel}>
                                          <i className={`fas ${isCaptchaVerified ? 'fa-shield-check' : 'fa-user-shield'}`}></i>

@@ -115,8 +115,9 @@ const DashboardPage = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <div className={styles.heroContent}>
-                        <h1>{timeContext.greeting}, {user?.username || 'Admin'}! 👋</h1>
-                        <p>Welcome to the central command for Maarula Classes. Your question bank is looking great today.</p>
+                        <h1>{timeContext.greeting}, {user?.username || 'Admin'}!</h1>
+                        <h2>Mathem Solvex Admin</h2>
+                        <p>Welcome to the central command for Mathem Solvex. Your question bank is looking great today.</p>
                         
                         <div className={styles.heroQuickStats}>
                             <div className={styles.heroStat}>

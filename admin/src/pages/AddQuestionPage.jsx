@@ -17,7 +17,7 @@ const AddQuestionPage = () => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        questionType: 'PYQ', exam: 'NIMCET', subject: '', topic: '', year: new Date().getFullYear(),
+        questionType: '', exam: '', subject: '', topic: '', year: new Date().getFullYear(),
         questionText: '', explanationText: '', videoURL: '', difficulty: 'Medium',
         options: [
             { text: '', imageURL: '', isCorrect: true },
@@ -26,6 +26,8 @@ const AddQuestionPage = () => {
             { text: '', imageURL: '', isCorrect: false },
         ],
     });
+
+    const [taxonomies, setTaxonomies] = useState({ exam: [], subject: [], category: [] });
 
     const [imageFiles, setImageFiles] = useState({});
     const [imagePreviews, setImagePreviews] = useState({});
@@ -47,6 +49,35 @@ const AddQuestionPage = () => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const taxRes = await api.get('/taxonomy');
+                const loadedTaxonomies = {
+                    exam: taxRes.data.exam || [],
+                    subject: taxRes.data.subject || [],
+                    category: taxRes.data.category || []
+                };
+                setTaxonomies(loadedTaxonomies);
+                
+                // Set initial form data if not in edit mode to the first available option
+                if (!isEditMode) {
+                    setFormData(prev => ({
+                        ...prev,
+                        questionType: loadedTaxonomies.category[0] || 'PYQ',
+                        exam: loadedTaxonomies.exam[0] || 'NIMCET',
+                        subject: loadedTaxonomies.subject[0] || ''
+                    }));
+                }
+            } catch (err) {
+                console.error("Failed to load taxonomies", err);
+                toast.error('Failed to load taxonomy options.');
+            }
+        };
+
+        fetchInitialData();
+    }, [isEditMode]);
 
     useEffect(() => {
         if (isEditMode) {
@@ -201,7 +232,7 @@ const AddQuestionPage = () => {
         <div className={styles.pageWrapper}>
             <div className={styles.headerBar}>
                 <div>
-                    <h1 className={styles.pageTitle}>{isEditMode ? 'Edit Question ✨' : 'Add New Question ✨'}</h1>
+                    <h1 className={styles.pageTitle}>{isEditMode ? 'Edit Question' : 'Add New Question'}</h1>
                     <p className={styles.pageSubtitle}>Create rich mathematical questions with the visual editor.</p>
                 </div>
                 <button
@@ -233,25 +264,27 @@ const AddQuestionPage = () => {
                                 <div className={styles.inputGroup}>
                                     <label>Type</label>
                                     <select name="questionType" value={formData.questionType} onChange={handleInputChange}>
-                                        <option value="PYQ">Previous Year (PYQ)</option>
-                                        <option value="Important">Important Question</option>
-                                        <option value="Practice">Practice Question</option>
+                                        {taxonomies.category.map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className={styles.inputGroup}>
                                     <label>Exam</label>
                                     <select name="exam" value={formData.exam} onChange={handleInputChange}>
-                                        <option value="NIMCET">NIMCET</option>
-                                        <option value="CUET PG">CUET PG</option>
-                                        <option value="MAH-CET">MAH-CET</option>
-                                        <option value="JAMIA">JAMIA</option>
-                                        <option value="JEE">JEE</option>
-                                        <option value="IGDTUW">IGDTUW</option>
+                                        {taxonomies.exam.map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className={styles.inputGroup}>
                                     <label>Subject</label>
-                                    <input type="text" name="subject" value={formData.subject} onChange={handleInputChange} placeholder="e.g., Mathematics" required />
+                                    <select name="subject" value={formData.subject} onChange={handleInputChange}>
+                                        <option value="">Select a Subject...</option>
+                                        {taxonomies.subject.map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className={styles.inputGroup}>
                                     <label>Topic</label>
