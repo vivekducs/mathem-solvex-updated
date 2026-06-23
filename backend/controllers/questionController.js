@@ -230,7 +230,7 @@ exports.createQuestion = async (req, res) => {
         const parsedOptions = JSON.parse(options || '[]'); // Ensure options is parsed safely
 
         // Basic server-side validation (Mongoose schema will provide more detail)
-        if (!exam || !subject || !topic || !year || !questionText || parsedOptions.length === 0) {
+        if (!exam || !subject || !topic || !questionText || parsedOptions.length === 0) {
             return res.status(400).json({ message: 'Missing required fields for question creation.' });
         }
         if (!parsedOptions.some(opt => opt.isCorrect)) {
@@ -273,7 +273,7 @@ exports.createQuestion = async (req, res) => {
             exam,
             subject,
             topic,
-            year: Number(year),
+            year: year ? Number(year) : undefined,
             questionText,
             questionImageURL,
             options: parsedOptions,
@@ -352,7 +352,11 @@ exports.updateQuestion = async (req, res) => {
         question.exam = exam;
         question.subject = subject;
         question.topic = topic;
-        question.year = Number(year);
+        if (year) {
+            question.year = Number(year);
+        } else {
+            question.year = undefined;
+        }
         question.questionText = questionText;
         question.explanationText = explanationText;
         question.videoURL = videoURL;

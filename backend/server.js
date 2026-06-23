@@ -20,6 +20,7 @@ const initializeQuestionNumberCounter = require('./utils/counterInit');
 require('./models/Question');
 require('./models/Post');
 require('./models/Counter');
+require('./models/Taxonomy');
 
 
 // --- 1) ENVIRONMENT VALIDATION ---
@@ -108,6 +109,7 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/posts', require('./routes/postRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/taxonomy', require('./routes/taxonomyRoutes'));
 
 app.get('/api/health', (req, res) => {
     res.set('Cache-Control', 'no-store');

@@ -40,7 +40,6 @@ const QuestionSchema = new mongoose.Schema({
     },
     questionType: {
         type: String,
-        enum: ['PYQ', 'Important', 'Practice'],
         default: 'PYQ'
     },
     year: {
